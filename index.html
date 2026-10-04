@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supercar Syndicate: Ultimate Clicker</title>
+    <style>
+        :root {
+            --bg-dark: #0b0c10;
+            --panel-bg: #1f2833;
+            --accent-red: #ff003c;
+            --accent-gold: #f39c12;
+            --accent-cyan: #45a29e;
+            --text-light: #edf5e1;
+            --border-color: #2c3531;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: #111;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--accent-red);
+            box-shadow: 0 0 15px rgba(255, 0, 60, 0.3);
+        }
+
+        .brand {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .brand span {
+            color: var(--accent-red);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        button.nav-btn {
+            background: var(--panel-bg);
+            border: 1px solid var(--accent-cyan);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        button.nav-btn:hover {
+            background: var(--accent-cyan);
+            color: #000;
+        }
+
+        .game-viewport {
+            display: grid;
+            grid-template-columns: 320px 1fr 380px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Left Side: Upgrades */
+        .sidebar {
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-gold);
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+
+        .upgrade-card {
+            background: #11161d;
+            border: 1px solid #2a3439;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.1s, border-color 0.2s;
+        }
+
+        .upgrade-card:hover {
+            border-color: var(--accent-red);
+            transform: translateY(-2px);
+        }
+
+        .upgrade-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: #2a3439 !important;
+            transform: none !important;
+        }
+
+        .upgrade-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .upgrade-level {
+            color: var(--accent-cyan);
+        }
+
+        .upgrade-desc {
+            font-size: 11px;
+            color: #888;
+            margin: 6px 0;
+        }
+
+        .upgrade-cost {
+            font-size: 12px;
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+
+        /* Center: Main Tap Node */
+        .center-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1a232a 0%, #0b0c10 100%);
+            position: relative;
+        }
+
+        .hud {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .cash-display {
+            font-size: 48px;
+            font-weight: 900;
+            color: #00ff88;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+            font-family: monospace;
+        }
+
+        .cps-display {
+            font-size: 16px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        .car-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .car-node {
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #2c3531 0%, #111 100%);
+            border: 6px solid var(--accent-red);
+            box-shadow: 0 0 40px rgba(255, 0, 60, 0.4);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 90px;
+            transition: transform 0.05s, box-shadow 0.1s;
+        }
+
+        .car-node:active {
+            transform: scale(0.92);
+            box-shadow: 0 0 60px rgba(255, 0, 60, 0.8);
+        }
+
+        .click-pop {
+            position: absolute;
+            color: #00ff88;
+            font-weight: 900;
+            font-size: 24px;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            text-shadow: 0 0 5px #000;
+            z-index: 100;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translate(-50%, -50%) translateY(0) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) translateY(-100px) scale(0.8); }
+        }
+
+        /* Right Side: Garage Cars & Prestige */
+        .garage-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .car-card {
+            background: #11161d;
+            border: 1px solid #2a3439;
+            padding: 12px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .car-card.active {
+            border-color: var(--accent-gold);
+            background: #1a221a;
+        }
+
+        .car-icon {
+            font-size: 32px;
+        }
+
+        .car-info {
+            flex: 1;
+        }
+
+        .car-name {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .car-bonus {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .car-buy-btn {
+            background: var(--accent-gold);
+            border: none;
+            color: #000;
+            padding: 6px 12px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .car-buy-btn.disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        /* Modal Screens */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-card {
+            background: var(--panel-bg);
+            border: 2px solid var(--accent-cyan);
+            padding: 30px;
+            border-radius: 8px;
+            width: 420px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 0 30px rgba(69, 162, 158, 0.3);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px; right: 15px;
+            background: none; border: none;
+            color: #aaa; font-size: 20px; cursor: pointer;
+        }
+
+        /* Spin Wheel Layout */
+        .wheel-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 5px solid var(--accent-gold);
+            background: conic-gradient(
+                #ff003c 0deg 60deg,
+                #f39c12 60deg 120deg,
+                #45a29e 120deg 180deg,
+                #8a2be2 180deg 240deg,
+                #00ff88 240deg 300deg,
+                #333 300deg 360deg
+            );
+            transition: transform 3s cubic-bezier(0.15, 0.9, 0.15, 1);
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -10px; left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 20px solid #fff;
+            z-index: 10;
+        }
+
+        .save-textarea {
+            width: 100%;
+            height: 80px;
+            background: #111;
+            border: 1px solid #333;
+            color: #00ff88;
+            padding: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            border-radius: 4px;
+            resize: none;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">Supercar <span>Syndicate</span></div>
+        <div class="header-actions">
+            <button class="nav-btn" onclick="openModal('rewards-modal')">🎁 Daily Reward</button>
+            <button class="nav-btn" onclick="openModal('spin-modal')">🎰 Spin Wheel</button>
+            <button class="nav-btn" onclick="openModal('save-modal')">💾 Save/Import</button>
+        </div>
+    </header>
+
+    <div class="game-viewport">
+        <!-- Upgrades Panel -->
+        <aside class="sidebar">
+            <div class="panel-title">Tuning Upgrades</div>
+            <div id="upgrades-container"></div>
+        </aside>
+
+        <!-- Main Clicker Core -->
+        <main class="center-stage">
+            <div class="hud">
+                <div class="cash-display" id="cash-display">$0</div>
+                <div class="cps-display" id="cps-display">Income: $0/sec</div>
+            </div>
+
+            <div class="car-container">
+                <div class="car-node" id="car-clicker" onmousedown="clickCar(event)">🏎</div>
+            </div>
+        </main>
+
+        <!-- Garage Fleet Panel -->
+        <aside class="sidebar">
+            <div class="panel-title">Fleet Showroom</div>
+            <div class="garage-list" id="garage-container"></div>
+        </aside>
+    </div>
+
+    <!-- Daily Rewards Modal -->
+    <div class="modal-overlay" id="rewards-modal">
+        <div class="modal-card">
+            <button class="close-btn" onclick="closeModal('rewards-modal')">✕</button>
+            <div class="modal-title">Daily Syndicate Bonus</div>
+            <p style="color: #aaa; font-size: 13px; margin-bottom: 20px;">Claim your daily cash payout to scale your fleet!</p>
+            <button class="nav-btn" id="claim-daily-btn" style="width: 100%; padding: 12px; background: var(--accent-gold); color: #000;" onclick="claimDailyReward()">CLAIM $50,000 CASH</button>
+        </div>
+    </div>
+
+    <!-- Spin Wheel Modal -->
+    <div class="modal-overlay" id="spin-modal">
+        <div class="modal-card">
+            <button class="close-btn" onclick="closeModal('spin-modal')">✕</button>
+            <div class="modal-title">Lucky Wheel</div>
+            <div class="wheel-container">
+                <div class="wheel-pointer"></div>
+                <div class="wheel" id="wheel-disc"></div>
+            </div>
+            <button class="nav-btn" id="spin-btn" style="width: 100%; padding: 12px; background: var(--accent-red);" onclick="spinWheel()">SPIN FOR $10,000</button>
+        </div>
+    </div>
+
+    <!-- Save/Import Base64 Modal -->
+    <div class="modal-overlay" id="save-modal">
+        <div class="modal-card">
+            <button class="close-btn" onclick="closeModal('save-modal')">✕</button>
+            <div class="modal-title">Cloud Key Management</div>
+            <p style="color: #aaa; font-size: 12px;">Export or Import your raw Base64 save string directly below:</p>
+            <textarea class="save-textarea" id="save-string-box" readonly></textarea>
+            <div style="display: flex; gap: 10px;">
+                <button class="nav-btn" style="flex:1;" onclick="exportSave()">Export Key</button>
+                <button class="nav-btn" style="flex:1;" onclick="importSave()">Import Key</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State Core
+        let gameState = {
+            cash: 0,
+            clickPower: 1,
+            lastDailyClaim: 0,
+            activeCarIndex: 0,
+            upgrades: {
+                ecu: { level: 0, baseCost: 15, costMult: 1.15, power: 1 },
+                turbo: { level: 0, baseCost: 100, costMult: 1.15, power: 5 },
+                nitro: { level: 0, baseCost: 1100, costMult: 1.15, power: 32 },
+                exhaust: { level: 0, baseCost: 12000, costMult: 1.2, power: 260 }
+            },
+            carsOwned: [true, false, false, false, false]
+        };
+
+        const cars = [
+            { name: "Sports Coupe", icon: "🏎️", cost: 0, mult: 1 },
+            { name: "Track Edition", icon: "🏎️", cost: 5000, mult: 2.5 },
+            { name: "V12 Hypercar", icon: "🏎️", cost: 50000, mult: 8 },
+            { name: "Electric Rocket", icon: "🏎️", cost: 500000, mult: 25 },
+            { name: "Syndicate Concept", icon: "🏎️", cost: 5000000, mult: 100 }
+        ];
+
+        function init() {
+            loadGameFromStorage();
+            renderUpgrades();
+            renderGarage();
+            updateHUD();
+            
+            // Ticks and Autosave
+            setInterval(gameLoop, 100);
+            setInterval(saveGameToStorage, 10000);
+        }
+
+        function getCPS() {
+            let baseCPS = (gameState.upgrades.ecu.level * gameState.upgrades.ecu.power) +
+                          (gameState.upgrades.turbo.level * gameState.upgrades.turbo.power) +
+                          (gameState.upgrades.nitro.level * gameState.upgrades.nitro.power) +
+                          (gameState.upgrades.exhaust.level * gameState.upgrades.exhaust.power);
+            return baseCPS * cars[gameState.activeCarIndex].mult;
+        }
+
+        function clickCar(e) {
+            let gain = gameState.clickPower * cars[gameState.activeCarIndex].mult;
+            gameState.cash += gain;
+            updateHUD();
+            spawnClickParticle(e.clientX, e.clientY, `+$${formatNum(gain)}`);
+        }
+
+        function gameLoop() {
+            let cps = getCPS();
+            if (cps > 0) {
+                gameState.cash += cps / 10;
+                updateHUD();
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('cash-display').innerText = `$${formatNum(Math.floor(gameState.cash))}`;
+            document.getElementById('cps-display').innerText = `Income: $${formatNum(getCPS().toFixed(1))}/sec`;
+            refreshUpgradeButtons();
+        }
+
+        function spawnClickParticle(x, y, text) {
+            let el = document.createElement('div');
+            el.className = 'click-pop';
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            el.innerText = text;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 800);
+        }
+
+        // Upgrades Engine
+        function renderUpgrades() {
+            let container = document.getElementById('upgrades-container');
+            container.innerHTML = '';
+            
+            const upgradeNames = {
+                ecu: 'ECU Remap',
+                turbo: 'Twin Turbo Kit',
+                nitro: 'NOS Injection',
+                exhaust: 'Titanium Exhaust'
+            };
+
+            for (let key in gameState.upgrades) {
+                let up = gameState.upgrades[key];
+                let cost = Math.floor(up.baseCost * Math.pow(up.costMult, up.level));
+                
+                let card = document.createElement('div');
+                card.className = 'upgrade-card';
+                card.id = `up-card-${key}`;
+                card.onclick = () => buyUpgrade(key);
+                card.innerHTML = `
+                    <div class="upgrade-header">
+                        <span>${upgradeNames[key]}</span>
+                        <span class="upgrade-level">v${up.level}</span>
+                    </div>
+                    <div class="upgrade-desc">+${up.power} base CPS</div>
+                    <div class="upgrade-cost" id="up-cost-${key}">$${formatNum(cost)}</div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        function refreshUpgradeButtons() {
+            for (let key in gameState.upgrades) {
+                let up = gameState.upgrades[key];
+                let cost = Math.floor(up.baseCost * Math.pow(up.costMult, up.level));
+                let card = document.getElementById(`up-card-${key}`);
+                if (card) {
+                    if (gameState.cash < cost) card.classList.add('disabled');
+                    else card.classList.remove('disabled');
+                    document.getElementById(`up-cost-${key}`).innerText = `$${formatNum(cost)}`;
+                }
+            }
+        }
+
+        function buyUpgrade(key) {
+            let up = gameState.upgrades[key];
+            let cost = Math.floor(up.baseCost * Math.pow(up.costMult, up.level));
+            if (gameState.cash >= cost) {
+                gameState.cash -= cost;
+                up.level++;
+                updateHUD();
+                renderUpgrades();
+            }
+        }
+
+        // Fleet Showroom Engine
+        function renderGarage() {
+            let container = document.getElementById('garage-container');
+            container.innerHTML = '';
+
+            cars.forEach((car, idx) => {
+                let isOwned = gameState.carsOwned[idx];
+                let isActive = gameState.activeCarIndex === idx;
+
+                let card = document.createElement('div');
+                card.className = `car-card ${isActive ? 'active' : ''}`;
+                card.innerHTML = `
+                    <div class="car-icon">${car.icon}</div>
+                    <div class="car-info">
+                        <div class="car-name">${car.name}</div>
+                        <div class="car-bonus">Multiplier: ${car.mult}x</div>
+                    </div>
+                    ${!isOwned 
+                        ? `<button class="car-buy-btn ${gameState.cash < car.cost ? 'disabled' : ''}" onclick="buyCar(${idx})">Buy $${formatNum(car.cost)}</button>` 
+                        : `<button class="car-buy-btn" style="background:#45a29e;" onclick="selectCar(${idx})">${isActive ? 'Active' : 'Equip'}</button>`
+                    }
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function buyCar(idx) {
+            let car = cars[idx];
+            if (gameState.cash >= car.cost && !gameState.carsOwned[idx]) {
+                gameState.cash -= car.cost;
+                gameState.carsOwned[idx] = true;
+                gameState.activeCarIndex = idx;
+                renderGarage();
+                updateHUD();
+            }
+        }
+
+        function selectCar(idx) {
+            if (gameState.carsOwned[idx]) {
+                gameState.activeCarIndex = idx;
+                renderGarage();
+                updateHUD();
+            }
+        }
+
+        // Modal Controls
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // Daily Rewards Engine
+        function claimDailyReward() {
+            let now = Date.now();
+            if (now - gameState.lastDailyClaim >= 86400000) { // 24 Hours
+                gameState.cash += 50000;
+                gameState.lastDailyClaim = now;
+                updateHUD();
+                alert("Daily Reward Claimed: $50,000!");
+                closeModal('rewards-modal');
+            } else {
+                let hoursLeft = Math.ceil((86400000 - (now - gameState.lastDailyClaim)) / 3600000);
+                alert(`Reward locked! Check back in ${hoursLeft} hours.`);
+            }
+        }
+
+        // Wheel Engine
+        let spinning = false;
+        function spinWheel() {
+            if (spinning) return;
+            if (gameState.cash < 10000) { alert("Not enough cash to spin!"); return; }
+
+            gameState.cash -= 10000;
+            updateHUD();
+            spinning = true;
+
+            let disc = document.getElementById('wheel-disc');
+            let randomDeg = 1440 + Math.floor(Math.random() * 360);
+            disc.style.transform = `rotate(${randomDeg}deg)`;
+
+            setTimeout(() => {
+                spinning = false;
+                let payout = Math.floor(Math.random() * 100000) + 5000;
+                gameState.cash += payout;
+                updateHUD();
+                alert(`Wheel landed! You won $${formatNum(payout)}!`);
+            }, 3000);
+        }
+
+        // Base64 Encryption Engine
+        function saveGameToStorage() {
+            let rawJson = JSON.stringify(gameState);
+            let b64 = btoa(rawJson);
+            localStorage.setItem('SUPERCAR_CLICKER_SAVE', b64);
+        }
+
+        function loadGameFromStorage() {
+            let b64 = localStorage.getItem('SUPERCAR_CLICKER_SAVE');
+            if (b64) {
+                try {
+                    let rawJson = atob(b64);
+                    gameState = JSON.parse(rawJson);
+                } catch(e) {
+                    console.error("Save state corrupted.");
+                }
+            }
+        }
+
+        function exportSave() {
+            saveGameToStorage();
+            let b64 = localStorage.getItem('SUPERCAR_CLICKER_SAVE');
+            document.getElementById('save-string-box').value = b64;
+        }
+
+        function importSave() {
+            let b64 = document.getElementById('save-string-box').value.trim();
+            if (!b64) return;
+            try {
+                let rawJson = atob(b64);
+                gameState = JSON.parse(rawJson);
+                saveGameToStorage();
+                renderUpgrades();
+                renderGarage();
+                updateHUD();
+                alert("Save successfully restored!");
+                closeModal('save-modal');
+            } catch(e) {
+                alert("Invalid save key!");
+            }
+        }
+
+        function formatNum(n) {
+            if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+            if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+            return n.toString();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
